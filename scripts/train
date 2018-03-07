@@ -1,0 +1,1 @@
+./darknet regressor train cfg/drive.data cfg/drive.cfg

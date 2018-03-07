@@ -65,6 +65,7 @@ void train_regressor(char *datacfg, char *cfgfile, char *weightfile, int *gpus, 
     load_thread = load_data(args);
 
     int epoch = (*net->seen)/N;
+    int bSaveEachEpoch = 1;
     while(get_current_batch(net) < net->max_batches || net->max_batches == 0){
         time=clock();
 
@@ -89,12 +90,14 @@ void train_regressor(char *datacfg, char *cfgfile, char *weightfile, int *gpus, 
         avg_loss = avg_loss*.9 + loss*.1;
         printf("%ld, %.3f: %f, %f avg, %f rate, %lf seconds, %ld images\n", get_current_batch(net), (float)(*net->seen)/N, loss, avg_loss, get_current_rate(net), sec(clock()-time), *net->seen);
         free_data(train);
-        if(*net->seen/N > epoch){
+        
+        if(bSaveEachEpoch || *net->seen/N > epoch){
             epoch = *net->seen/N;
             char buff[256];
             sprintf(buff, "%s/%s_%d.weights",backup_directory,base, epoch);
             save_weights(net, buff);
         }
+
         if(get_current_batch(net)%100 == 0){
             char buff[256];
             sprintf(buff, "%s/%s.backup",backup_directory,base);
@@ -136,7 +139,7 @@ void predict_regressor(char *cfgfile, char *weightfile, char *filename)
         float *X = sized.data;
         time=clock();
         float *predictions = network_predict(net, X);
-        printf("Predicted: %f\n", predictions[0]);
+        printf("Predicted: %f %f\n", predictions[0], predictions[1]);
         printf("%s: Predicted in %f seconds.\n", input, sec(clock()-time));
         free_image(im);
         free_image(sized);
@@ -232,7 +235,7 @@ void run_regressor(int argc, char **argv)
     char *cfg = argv[4];
     char *weights = (argc > 5) ? argv[5] : 0;
     char *filename = (argc > 6) ? argv[6]: 0;
-    if(0==strcmp(argv[2], "test")) predict_regressor(data, cfg, weights);
+    if(0==strcmp(argv[2], "test")) predict_regressor(cfg, weights, filename);
     else if(0==strcmp(argv[2], "train")) train_regressor(data, cfg, weights, gpus, ngpus, clear);
     else if(0==strcmp(argv[2], "demo")) demo_regressor(data, cfg, weights, cam_index, filename);
 }
