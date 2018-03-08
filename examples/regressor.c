@@ -147,6 +147,45 @@ void predict_regressor(char *cfgfile, char *weightfile, char *filename)
     }
 }
 
+void profile_regressor(char *cfgfile, char *weightfile, char *filename)
+{
+    network *net = load_network(cfgfile, weightfile, 0);
+    set_batch_network(net, 1);
+    srand(2222222);
+
+    clock_t time;
+    char buff[256];
+    char *input = buff;
+    strncpy(input, filename, 256);
+    image im = load_image_color(input, 0, 0);
+    image sized = letterbox_image(im, net->w, net->h);
+
+    float *X = sized.data;
+
+    int iLoop = 0;
+    
+    time=clock();
+
+    while(1)
+    {   
+        float *predictions = network_predict(net, X);
+        iLoop++;
+        if(iLoop == 100)
+        {
+            float elapsed = sec(clock()-time);
+            float fps = 100.0f / elapsed;
+            printf("Prediction at %f FPS\n", fps);
+            time=clock();
+            iLoop = 0;
+        }
+        
+    }
+
+    free_image(im);
+    free_image(sized);
+
+}
+
 
 void demo_regressor(char *datacfg, char *cfgfile, char *weightfile, int cam_index, const char *filename)
 {
@@ -238,6 +277,7 @@ void run_regressor(int argc, char **argv)
     if(0==strcmp(argv[2], "test")) predict_regressor(cfg, weights, filename);
     else if(0==strcmp(argv[2], "train")) train_regressor(data, cfg, weights, gpus, ngpus, clear);
     else if(0==strcmp(argv[2], "demo")) demo_regressor(data, cfg, weights, cam_index, filename);
+    else if(0==strcmp(argv[2], "profile")) profile_regressor(cfg, weights, filename);
 }
 
 
