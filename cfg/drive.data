@@ -1,0 +1,4 @@
+train = /cygdrive/d/d2/data/drive.train.list
+valid = /cygdrive/d/d2/data/drive.test.list
+backup = ./weights
+labels = /cygdrive/d/d2/data/drive.labels.list
